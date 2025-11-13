@@ -1,22 +1,20 @@
- 
-
 import { auth, googleProvider, db } from "@/lib/firebase";
 import { signInWithPopup } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 export const googleLogin = async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
 
-    if (!user.email) {
-      throw new Error("Google account has no email.");
-    }
+    if (!user.email) throw new Error("Akun Google tidak memiliki email.");
 
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
+    if (userSnap.exists()) {
+      await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+    } else {
       await setDoc(userRef, {
         uid: user.uid,
         name: user.displayName || "Unknown User",
@@ -25,33 +23,39 @@ export const googleLogin = async () => {
         verified: user.emailVerified,
         createdAt: serverTimestamp(),
         provider: "google",
+        lastLoginAt: serverTimestamp(),
       });
     }
 
+    const token = await user.getIdToken();
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userUID", user.uid);
+      localStorage.setItem("session", token);
+    }
+
     return {
-      success: "Login successful with Google!",
+      success: "Login dengan Google berhasil!",
       user: {
         uid: user.uid,
-        name: user.displayName,
         email: user.email,
+        name: user.displayName,
         photo: user.photoURL,
-        verified: user.emailVerified,
       },
     };
   } catch (error: any) {
     console.error("Google Login Error:", error);
+    let message = "Login Google gagal.";
 
-    let message = "Google login failed.";
     switch (error.code) {
       case "auth/popup-closed-by-user":
-        message = "Popup closed before completing sign in.";
+        message = "Popup ditutup sebelum proses login selesai.";
         break;
       case "auth/cancelled-popup-request":
-        message = "Login popup was cancelled.";
+        message = "Login popup dibatalkan.";
         break;
       default:
         message = error.message || message;
-        break;
     }
 
     return { error: message };

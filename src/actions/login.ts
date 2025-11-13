@@ -1,7 +1,9 @@
-// src/actions/login.ts
+"use server";
+
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { cookies } from "next/headers";
 
 export const login = async (values: { email: string; password: string }) => {
   try {
@@ -11,21 +13,14 @@ export const login = async (values: { email: string; password: string }) => {
     const user = userCredential.user;
 
     if (!user.emailVerified) {
-      return {
-        error: "Email belum diverifikasi. Silakan periksa inbox Anda dan klik tautan verifikasi.",
-      };
+      return { error: "Email belum diverifikasi. Silakan periksa inbox Anda." };
     }
-
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-      });
+      await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
     } else {
-
       await setDoc(userRef, {
         uid: user.uid,
         name: user.displayName || "",
@@ -36,19 +31,24 @@ export const login = async (values: { email: string; password: string }) => {
         lastLoginAt: serverTimestamp(),
       });
     }
+
     const token = await user.getIdToken();
 
+    const cookieStore = cookies();
+    (await cookieStore).set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24, 
+    });
+
     if (typeof window !== "undefined") {
-      localStorage.setItem("firebaseToken", token);
       localStorage.setItem("userUID", user.uid);
     }
 
     return {
-      success: "Login berhasil dan data tersimpan di database!",
-      user: {
-        uid: user.uid,
-        email: user.email,
-      },
+      success: "Login berhasil!",
+      user: { uid: user.uid, email: user.email },
     };
   } catch (error: any) {
     console.error("Firebase login error:", error);
@@ -59,7 +59,7 @@ export const login = async (values: { email: string; password: string }) => {
         message = "Format email tidak valid.";
         break;
       case "auth/user-disabled":
-        message = "Akun ini telah dinonaktifkan.";
+        message = "Akun dinonaktifkan.";
         break;
       case "auth/user-not-found":
         message = "Pengguna tidak ditemukan.";

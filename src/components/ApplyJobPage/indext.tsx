@@ -100,7 +100,7 @@ export default function ApplyJobPage({ id }: { id: string }) {
             <label className="cursor-pointer border border-neutral-300 px-3 py-1 rounded-md hover:opacity-90 transition">
               <div className="flex flex-row items-center justify-center gap-1">
                 <MdOutlineFileUpload size={20} />
-                <p className="text-black font-bold text-sm"> Take a Picture </p>
+                <p className="text-black font-bold text-sm"> Submit Picture </p>
               </div>
               <input
                 type="file"

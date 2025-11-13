@@ -15,7 +15,7 @@ const VerifyLoginPage = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const verifyLogin = async () => {
-    router.push("/");
+    router.push("/login");
   };
 
   // const verifyEmailLink = async () => {

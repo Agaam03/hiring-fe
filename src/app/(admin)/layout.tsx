@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import NavbarAdmin from "@/components/NavbarAdmin";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default async function AdminLayout({
   children,
@@ -9,7 +10,7 @@ export default async function AdminLayout({
   return (
     <>
       <NavbarAdmin />
-      {children}
+      <ProtectedRoute>{children}</ProtectedRoute>
     </>
   );
 }

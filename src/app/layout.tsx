@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import "./globals.css";
+import ClientAuthGuard from "@/components/ProtectedRoute";
 
 const geistSans = Nunito_Sans({
   variable: "--font-geist-sans",
@@ -19,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.className} bg-background-white`} suppressHydrationWarning>
+      <body
+        className={`${geistSans.className} bg-background-white`}
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
